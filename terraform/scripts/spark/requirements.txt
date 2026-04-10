@@ -1,0 +1,6 @@
+apache-beam[gcp]==2.56.*
+google-cloud-pubsub==2.*
+google-cloud-bigtable==2.*
+google-cloud-bigquery==3.*
+google-cloud-aiplatform==1.*
+redis==5.*

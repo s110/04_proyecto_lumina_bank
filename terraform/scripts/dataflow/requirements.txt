@@ -1,0 +1,4 @@
+google-cloud-pubsub==2.*
+google-cloud-bigtable==2.*
+google-cloud-bigquery==3.*
+redis==5.*
