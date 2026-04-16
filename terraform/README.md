@@ -93,6 +93,7 @@ terraform/
 gcloud auth login
 gcloud auth application-default login
 gcloud config set project project-413a2817-068f-425d-b1d
+gcloud config set compute/region us-east1
 ```
 
 ### Paso 2: Inicializar Terraform
@@ -127,17 +128,14 @@ python scripts/generate_test_data.py --mode batch --output ./test_data/ --count 
 gsutil cp ./test_data/transactions.csv gs://$(terraform output -raw raw_bucket_name)/historical/transactions/
 
 # Enviar transacciones en streaming al endpoint de Cloud Run
-python scripts/generate_test_data.py \
-  --mode streaming \
-  --url $(terraform output -raw cloud_run_ingestion_url) \
-  --count 100
+python scripts/generate_test_data.py --mode streaming --url $(terraform output -raw cloud_run_ingestion_url) --count 100
 ```
 
 ### Paso 6: Subir scripts de Spark a GCS
 
 ```bash
 gsutil cp scripts/spark/batch_processing.py \
-  gs://$(terraform output -raw dataproc_cluster_name)-lumina-spark-scripts/scripts/
+  gs://$(gcloud config get-value project)-lumina-spark-scripts/scripts/
 ```
 
 ### Paso 7: Lanzar pipeline de Dataflow (streaming)
@@ -145,7 +143,7 @@ gsutil cp scripts/spark/batch_processing.py \
 ```bash
 python scripts/spark/streaming_pipeline.py \
   --project=$(gcloud config get-value project) \
-  --region=us-central1 \
+  --region=us-east1 \
   --input_subscription=$(terraform output -raw ingestion_pubsub_topic | sed 's/topics/subscriptions/')-dataflow-subscription \
   --output_table=$(gcloud config get-value project):lumina_streaming.transactions \
   --distribution_topic=$(terraform output -raw distribution_topic_id) \
@@ -163,7 +161,7 @@ Para reemplazar las imágenes placeholder por las aplicaciones reales:
 
 ```bash
 PROJECT_ID=$(gcloud config get-value project)
-REGION=us-central1
+REGION=us-east1
 
 # Construir y subir imagen de ingesta
 cd scripts/cloud_run_ingestion/
@@ -189,10 +187,12 @@ gcloud run services update lumina-frontend-bff --image ${REGION}-docker.pkg.dev/
 | Recurso | Propósito |
 |---------|-----------|
 | VPC + Subnet | Red privada con rangos secundarios para pods/services |
-| VPC Connector | Permite a Cloud Run acceder a recursos en la VPC (Redis, Bigtable) |
+| Private IP Range + VPC Peering | Rango privado para servicios gestionados (Redis) vía Service Networking |
+| VPC Connector | Permite a Cloud Run acceder a recursos en la VPC (Redis, Bigtable) — usa `ip_cidr_range 10.1.0.0/28` |
 | Cloud NAT | Acceso a internet desde recursos privados |
 | Firewall Rules | Tráfico interno + SSH para Dataproc |
 | Service Account | Cuenta de servicio con roles amplios (trial mode) |
+| IAM Default Compute SA | Roles de Cloud Build, Logging, Storage y Artifact Registry para Cloud Functions v2 |
 
 ### Módulo `ingestion`
 | Recurso | Propósito |
@@ -210,7 +210,7 @@ gcloud run services update lumina-frontend-bff --image ${REGION}-docker.pkg.dev/
 | Dataflow (config) | Buckets staging/temp para pipeline de streaming |
 | Memorystore Redis | Cache sub-ms para transacciones recientes y estados de cliente |
 | Bigtable | Perfiles de usuario y señales de fraude con latencia ~10ms |
-| Dataproc | Clúster Spark para batch: tendencias, GBT, métricas de sucursal |
+| Dataproc | Clúster Spark (`e2-standard-2`, disco 50GB) para batch: tendencias, GBT, métricas de sucursal |
 | Vertex AI Dataset | Dataset para entrenamiento de modelo de detección de fraude |
 
 ### Módulo `storage`
@@ -273,12 +273,13 @@ terraform destroy
 |----------|-------------|---------|
 | `project_id` | ID del proyecto GCP | `project-413a2817-068f-425d-b1d` |
 | `project_number` | Número del proyecto | `251068454544` |
-| `region` | Región de despliegue | `us-central1` |
+| `region` | Región de despliegue | `us-east1` |
 | `bank_entities` | Lista de 12 bancos | (ver variables.tf) |
 | `pubsub_message_retention` | Retención Pub/Sub | `2678400s` (31 días) |
 | `pubsub_max_delivery_attempts` | Intentos antes de DLT | `5` |
 | `batch_schedule_cron` | Cron del batch | `0 2 * * *` (2 AM) |
-| `dataproc_cluster_workers` | Workers Dataproc | `2` |
+| `dataproc_cluster_workers` | Workers Dataproc (mínimo 2) | `2` |
+| `dataproc_machine_type` | Tipo de máquina Dataproc | `e2-standard-2` |
 | `redis_memory_size_gb` | Memoria Redis | `1` GB |
 | `bigtable_num_nodes` | Nodos Bigtable | `1` |
 
@@ -288,6 +289,8 @@ terraform destroy
 
 - **Service Account único** con roles amplios (configuración para trial GCP de 90 días)
 - **VPC privada** con subredes dedicadas y acceso privado a Google APIs
+- **Private Service Access** para conexión privada a servicios gestionados (Redis)
+- **IAM para Default Compute SA:** Roles de Cloud Build, Logging, Storage y Artifact Registry necesarios para Cloud Functions v2
 - **Cloud Run API Backend** protegido por IAM (solo invocable por el service account)
 - **Cloud Run Frontend** público (accesible por usuarios finales)
 - **Pub/Sub** con retención y dead-letter topics para garantizar entrega de mensajes

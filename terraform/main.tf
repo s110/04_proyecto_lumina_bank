@@ -6,9 +6,10 @@
 module "network" {
   source = "./modules/network"
 
-  project_id = var.project_id
-  region     = var.region
-  labels     = var.labels
+  project_id     = var.project_id
+  project_number = var.project_number
+  region         = var.region
+  labels         = var.labels
 
   depends_on = [time_sleep.wait_for_apis]
 }

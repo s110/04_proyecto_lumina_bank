@@ -70,15 +70,15 @@ variable "pubsub_max_delivery_attempts" {
 }
 
 variable "dataproc_cluster_workers" {
-  description = "Número de workers en el clúster Dataproc"
+  description = "Número de workers en el clúster Dataproc (mínimo 2)"
   type        = number
   default     = 2
 }
 
 variable "dataproc_machine_type" {
-  description = "Tipo de máquina para nodos Dataproc"
+  description = "Tipo de máquina para nodos Dataproc (e2 = más disponible que n1)"
   type        = string
-  default     = "n1-standard-4"
+  default     = "e2-standard-2"
 }
 
 variable "redis_memory_size_gb" {

@@ -85,15 +85,13 @@ resource "google_compute_firewall" "allow_ssh" {
 }
 
 # --- VPC Connector para Cloud Run ---
+# Usa ip_cidr_range directamente (GCP crea la subred /28 internamente)
 resource "google_vpc_access_connector" "connector" {
-  name    = "lumina-vpc-connector"
-  project = var.project_id
-  region  = var.region
-
-  subnet {
-    name = google_compute_subnetwork.lumina_subnet.name
-  }
-
+  name          = "lumina-vpc-connector"
+  project       = var.project_id
+  region        = var.region
+  network       = google_compute_network.lumina_vpc.name
+  ip_cidr_range = "10.1.0.0/28"
   min_instances = 2
   max_instances = 3
   machine_type  = "e2-micro"
@@ -155,4 +153,29 @@ resource "google_project_iam_member" "sa_roles" {
   project = var.project_id
   role    = each.value
   member  = "serviceAccount:${google_service_account.lumina_sa.email}"
+}
+
+# Cloud Functions v2 requiere que el default compute SA tenga permisos de Cloud Build
+resource "google_project_iam_member" "default_compute_cloudbuild" {
+  project = var.project_id
+  role    = "roles/cloudbuild.builds.builder"
+  member  = "serviceAccount:${var.project_number}-compute@developer.gserviceaccount.com"
+}
+
+resource "google_project_iam_member" "default_compute_logs" {
+  project = var.project_id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${var.project_number}-compute@developer.gserviceaccount.com"
+}
+
+resource "google_project_iam_member" "default_compute_storage" {
+  project = var.project_id
+  role    = "roles/storage.objectViewer"
+  member  = "serviceAccount:${var.project_number}-compute@developer.gserviceaccount.com"
+}
+
+resource "google_project_iam_member" "default_compute_ar" {
+  project = var.project_id
+  role    = "roles/artifactregistry.reader"
+  member  = "serviceAccount:${var.project_number}-compute@developer.gserviceaccount.com"
 }

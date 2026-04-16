@@ -178,7 +178,7 @@ resource "google_storage_bucket" "functions_source" {
 resource "google_storage_bucket_object" "function_source" {
   name   = "batch-orchestrator/function-source.zip"
   bucket = google_storage_bucket.functions_source.name
-  source = "${path.module}/../../../scripts/cloud_function/function-source.zip"
+  source = "${path.root}/scripts/cloud_function/function-source.zip"
 }
 
 resource "google_cloudfunctions2_function" "batch_orchestrator" {

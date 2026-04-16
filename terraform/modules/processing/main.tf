@@ -129,7 +129,7 @@ resource "google_dataproc_cluster" "batch_cluster" {
 
       disk_config {
         boot_disk_type    = "pd-standard"
-        boot_disk_size_gb = 100
+        boot_disk_size_gb = 50
       }
     }
 
@@ -139,7 +139,7 @@ resource "google_dataproc_cluster" "batch_cluster" {
 
       disk_config {
         boot_disk_type    = "pd-standard"
-        boot_disk_size_gb = 100
+        boot_disk_size_gb = 50
       }
     }
 
@@ -153,7 +153,6 @@ resource "google_dataproc_cluster" "batch_cluster" {
     }
 
     gce_cluster_config {
-      network    = var.network_id
       subnetwork = var.subnetwork_id
       tags       = ["dataproc-node"]
 
@@ -167,10 +166,6 @@ resource "google_dataproc_cluster" "batch_cluster" {
       }
     }
 
-    initialization_action {
-      script      = "gs://goog-dataproc-initialization-actions-${var.region}/python/pip-install.sh"
-      timeout_sec = 300
-    }
   }
 }
 

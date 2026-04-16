@@ -5,6 +5,6 @@
 project_id     = "project-413a2817-068f-425d-b1d"
 project_number = "251068454544"
 project_name   = "LuminaBank"
-region         = "us-central1"
-zone           = "us-central1-a"
+region         = "us-east1"
+zone           = "us-east1-b"
 environment    = "dev"
