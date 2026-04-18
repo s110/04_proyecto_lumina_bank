@@ -2,9 +2,9 @@
 # Lumina Bank - Valores de Variables
 # =============================================================================
 
-project_id     = "project-413a2817-068f-425d-b1d"
-project_number = "251068454544"
-project_name   = "LuminaBank"
+project_id     = "lumina-bank-big-data-2026"
+project_number = "529914459357"
+project_name   = "lumina-bank-big-data-2026"
 region         = "us-east1"
 zone           = "us-east1-b"
 environment    = "dev"

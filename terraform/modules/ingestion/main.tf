@@ -99,7 +99,7 @@ resource "google_cloud_run_v2_service" "ingestion_api" {
     }
 
     containers {
-      image = "us-docker.pkg.dev/cloudrun/container/hello"
+      image = "gcr.io/${var.project_id}/lumina-ingestion-api"
 
       ports {
         container_port = 8080

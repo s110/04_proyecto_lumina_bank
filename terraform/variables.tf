@@ -5,19 +5,19 @@
 variable "project_id" {
   description = "ID del proyecto GCP"
   type        = string
-  default     = "project-413a2817-068f-425d-b1d"
+  default     = "lumina-bank-big-data-2026"
 }
 
 variable "project_number" {
   description = "Número del proyecto GCP"
   type        = string
-  default     = "251068454544"
+  default     = "529914459357"
 }
 
 variable "project_name" {
   description = "Nombre del proyecto"
   type        = string
-  default     = "LuminaBank"
+  default     = "lumina-bank-big-data-2026"
 }
 
 variable "region" {
